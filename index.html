@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Editor</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <button class="file-btn" onclick="newFile()">New</button>
+            <button class="file-btn" onclick="openFile()">Open</button>
+            <button class="file-btn" onclick="saveFile()">Save</button>
+            <button class="file-btn" onclick="saveAsFile()">Save As</button>
+        </div>
+        
+        <div class="separator"></div>
+        
+        <div class="toolbar-group">
+            <button onclick="insertMarkdown('**', '**')" title="Bold"><b>B</b></button>
+            <button onclick="insertMarkdown('*', '*')" title="Italic"><i>I</i></button>
+            <button onclick="insertMarkdown('~~', '~~')" title="Strikethrough"><s>S</s></button>
+        </div>
+        
+        <div class="toolbar-group">
+            <button onclick="insertHeading(1)" title="Heading 1">H1</button>
+            <button onclick="insertHeading(2)" title="Heading 2">H2</button>
+            <button onclick="insertHeading(3)" title="Heading 3">H3</button>
+        </div>
+        
+        <div class="toolbar-group">
+            <button onclick="insertMarkdown('```\n', '\n```')" title="Code Block">{ }</button>
+            <button onclick="insertMarkdown('`', '`')" title="Inline Code">&lt;/&gt;</button>
+        </div>
+        
+        <div class="toolbar-group">
+            <button onclick="insertList('unordered')" title="Bullet List">• List</button>
+            <button onclick="insertList('ordered')" title="Numbered List">1. List</button>
+            <button onclick="insertMarkdown('> ', '')" title="Quote">"</button>
+        </div>
+        
+        <div class="toolbar-group">
+            <button onclick="insertLink()" title="Link">Link</button>
+            <button onclick="insertImage()" title="Image">Image</button>
+        </div>
+        
+        <div class="toolbar-group">
+            <button onclick="insertTable()" title="Table">Table</button>
+            <button onclick="insertMarkdown('---', '')" title="Horizontal Rule">—</button>
+        </div>
+    </div>
+    
+    <div class="editor-container">
+        <div class="editor">
+            <div class="editor-header">Markdown</div>
+            <div class="editor-content">
+                <textarea id="markdown" placeholder="Start typing your markdown here..."></textarea>
+            </div>
+        </div>
+        <div class="preview">
+            <div class="preview-header">Preview</div>
+            <div class="preview-content" id="preview">
+                <p>Preview will appear here...</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="status-bar">
+        <span id="word-count">Words: 0 | Characters: 0</span>
+        <span id="file-path">Untitled.md</span>
+    </div>
+
+    <script src="js/renderer.js"></script>
+</body>
+</html>
