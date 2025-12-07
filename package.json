@@ -1,27 +1,33 @@
 {
-  "name": "md-editor",
-  "version": "1.0.0",
-  "description": "A simple Electron-based markdown editor.",
-  "main": "main.js",
-  "scripts": {
-    "start": "electron .",
-    "dev": "electron . --dev",
-    "build": "electron-builder",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [
-    "electron",
-    "markdown",
-    "editor"
-  ],
-  "author": "Matisse Urquhart / HereLiesHugo",
-  "license": "MIT",
-  "type": "commonjs",
-  "devDependencies": {
-    "electron": "^39.2.6",
-    "electron-builder": "^26.0.12"
-  },
-  "dependencies": {
-    "marked": "^17.0.1"
-  }
+    "name": "open-markdown-editor",
+    "productName": "Open Markdown Editor",
+    "version": "1.0.0",
+    "description": "A simple Electron-based markdown editor.",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron .",
+        "dev": "electron . --dev",
+        "build": "electron-builder",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "electron",
+        "markdown",
+        "editor"
+    ],
+    "author": "Matisse Urquhart / HereLiesHugo",
+    "license": "MIT",
+    "type": "commonjs",
+    "build": {
+        "linux": {
+            "category": "TextEditor"
+        }
+    },
+    "devDependencies": {
+        "electron": "^39.2.6",
+        "electron-builder": "^26.0.12"
+    },
+    "dependencies": {
+        "marked": "^17.0.1"
+    }
 }
