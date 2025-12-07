@@ -15,8 +15,10 @@ A modern, Electron-based Markdown editor with a focus on aesthetics and ease of 
   - **Tables**: Create tables with custom rows and columns.
 
 ## Installation
-### Snap:
+#### Snap:
 `sudo snap install open-markdown-editor`
+
+### Manual:
 
 1.  Clone the repository.
 2.  Install dependencies:
