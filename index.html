@@ -6,48 +6,42 @@
     <title>Markdown Editor</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="dark-mode">
     <div class="toolbar">
-        <div class="toolbar-group">
-            <button class="file-btn" onclick="newFile()">New</button>
-            <button class="file-btn" onclick="openFile()">Open</button>
-            <button class="file-btn" onclick="saveFile()">Save</button>
-            <button class="file-btn" onclick="saveAsFile()">Save As</button>
-        </div>
-        
-        <div class="separator"></div>
+
         
         <div class="toolbar-group">
-            <button onclick="insertMarkdown('**', '**')" title="Bold"><b>B</b></button>
-            <button onclick="insertMarkdown('*', '*')" title="Italic"><i>I</i></button>
-            <button onclick="insertMarkdown('~~', '~~')" title="Strikethrough"><s>S</s></button>
+            <button onclick="insertMarkdown('**', '**')" title="Bold"><b>Bold</b></button>
+            <button onclick="insertMarkdown('*', '*')" title="Italic"><i>Italic</i></button>
+            <button onclick="insertMarkdown('~~', '~~')" title="Strikethrough"><s>Strike</s></button>
         </div>
         
         <div class="toolbar-group">
             <button onclick="insertHeading(1)" title="Heading 1">H1</button>
             <button onclick="insertHeading(2)" title="Heading 2">H2</button>
             <button onclick="insertHeading(3)" title="Heading 3">H3</button>
+            <button onclick="insertHeading(4)" title="Heading 4">H4</button>
+            <button onclick="insertHeading(5)" title="Heading 5">H5</button>
+            <button onclick="insertHeading(6)" title="Heading 6">H6</button>
         </div>
         
         <div class="toolbar-group">
-            <button onclick="insertMarkdown('```\n', '\n```')" title="Code Block">{ }</button>
-            <button onclick="insertMarkdown('`', '`')" title="Inline Code">&lt;/&gt;</button>
+            <button onclick="insertList('unordered')" title="Bullet List">• Bullet</button>
+            <button onclick="insertList('ordered')" title="Numbered List">1. Number</button>
+            <button onclick="insertList('task')" title="Task List">☑ Task</button>
+            <button onclick="insertMarkdown('> ', '')" title="Quote">" Quote</button>
         </div>
         
         <div class="toolbar-group">
-            <button onclick="insertList('unordered')" title="Bullet List">• List</button>
-            <button onclick="insertList('ordered')" title="Numbered List">1. List</button>
-            <button onclick="insertMarkdown('> ', '')" title="Quote">"</button>
+            <button onclick="insertMarkdown('```\n', '\n```')" title="Code Block">{ } Code</button>
+            <button onclick="insertMarkdown('`', '`')" title="Inline Code">&lt;/&gt; Inline</button>
         </div>
         
         <div class="toolbar-group">
             <button onclick="insertLink()" title="Link">Link</button>
             <button onclick="insertImage()" title="Image">Image</button>
-        </div>
-        
-        <div class="toolbar-group">
             <button onclick="insertTable()" title="Table">Table</button>
-            <button onclick="insertMarkdown('---', '')" title="Horizontal Rule">—</button>
+            <button onclick="insertMarkdown('---', '')" title="Horizontal Rule">— Rule</button>
         </div>
     </div>
     
@@ -55,13 +49,69 @@
         <div class="editor">
             <div class="editor-header">Markdown</div>
             <div class="editor-content">
-                <textarea id="markdown" placeholder="Start typing your markdown here..."></textarea>
+                <textarea id="markdown" placeholder="Type your markdown here..."></textarea>
             </div>
         </div>
+        <div class="separator"></div>
         <div class="preview">
             <div class="preview-header">Preview</div>
-            <div class="preview-content" id="preview">
-                <p>Preview will appear here...</p>
+            <div class="preview-content" id="preview"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <!-- Link Modal -->
+        <div id="link-modal" class="modal hidden">
+            <h3>Insert Link</h3>
+            <div class="form-group">
+                <label>URL</label>
+                <input type="text" id="link-url" placeholder="https://example.com">
+            </div>
+            <div class="form-group">
+                <label>Text</label>
+                <input type="text" id="link-text" placeholder="Link Text">
+            </div>
+            <div class="modal-actions">
+                <button id="link-cancel">Cancel</button>
+                <button id="link-submit" class="primary">Insert</button>
+            </div>
+        </div>
+
+        <!-- Image Modal -->
+        <div id="image-modal" class="modal hidden">
+            <h3>Insert Image</h3>
+            <div class="form-group">
+                <label>Image Source</label>
+                <div class="input-group">
+                    <input type="text" id="image-url" placeholder="https://example.com/image.png">
+                    <button id="image-browse">Browse</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Alt Text</label>
+                <input type="text" id="image-alt" placeholder="Image Description">
+            </div>
+            <div class="modal-actions">
+                <button id="image-cancel">Cancel</button>
+                <button id="image-submit" class="primary">Insert</button>
+            </div>
+        </div>
+
+        <!-- Table Modal -->
+        <div id="table-modal" class="modal hidden">
+            <h3>Insert Table</h3>
+            <div class="form-group">
+                <label>Rows</label>
+                <input type="number" id="table-rows" value="3" min="1">
+            </div>
+            <div class="form-group">
+                <label>Columns</label>
+                <input type="number" id="table-cols" value="3" min="1">
+            </div>
+            <div class="modal-actions">
+                <button id="table-cancel">Cancel</button>
+                <button id="table-submit" class="primary">Insert</button>
             </div>
         </div>
     </div>

@@ -1,4 +1,26 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, shell } = require('electron');
+const { marked } = require('marked');
+
+// Configure marked with custom renderer
+const renderer = {
+  link(href, title, text) {
+    if (typeof href === 'object' && href !== null) {
+        // Handle marked v5+ / v17+ signature where arguments are passed as a single object or token
+        const token = href;
+        href = token.href;
+        title = token.title;
+        text = token.text;
+    }
+    return `<a href="${href}" title="${title || ''}" target="_blank">${text}</a>`;
+  }
+};
+
+marked.use({
+  renderer,
+  breaks: true,
+  gfm: true
+});
+
 const markdown = document.getElementById('markdown');
 const preview = document.getElementById('preview');
 const wordCount = document.getElementById('word-count');
@@ -17,54 +39,21 @@ markdown.addEventListener('input', () => {
     scheduleAutoSave();
 });
 
+// Intercept link clicks in preview
+preview.addEventListener('click', (e) => {
+    if (e.target.tagName === 'A') {
+        e.preventDefault();
+        shell.openExternal(e.target.href);
+    }
+});
+
 function updatePreview() {
     const text = markdown.value;
-    const html = parseMarkdown(text);
+    const html = marked.parse(text);
     preview.innerHTML = html;
 }
 
-function parseMarkdown(text) {
-    return text
-        // Headers
-        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-        // Bold
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        // Italic
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        // Strikethrough
-        .replace(/~~(.*?)~~/g, '<del>$1</del>')
-        // Inline code
-        .replace(/`([^`]+)`/g, '<code>$1</code>')
-        // Links
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-        // Images
-        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img alt="$1" src="$2">')
-        // Code blocks
-        .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-        // Blockquotes
-        .replace(/^> (.*)$/gim, '<blockquote>$1</blockquote>')
-        // Unordered lists
-        .replace(/^[\*\-\+] (.*)$/gim, '<li>$1</li>')
-        // Ordered lists
-        .replace(/^\d+\. (.*)$/gim, '<li>$1</li>')
-        // Horizontal rules
-        .replace(/^---$/gim, '<hr>')
-        // Line breaks
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>')
-        // Wrap in paragraphs
-        .replace(/^(.+)$/gm, '<p>$1</p>')
-        // Clean up empty paragraphs
-        .replace(/<p><\/p>/g, '')
-        .replace(/<p>(<h[1-6]>)/g, '$1')
-        .replace(/(<\/h[1-6]>)<\/p>/g, '$1')
-        .replace(/<p>(<hr>)<\/p>/g, '$1')
-        .replace(/<p>(<blockquote>.*?<\/blockquote>)<\/p>/g, '$1')
-        .replace(/<p>(<pre>.*?<\/pre>)<\/p>/g, '$1')
-        .replace(/<p>(<li>.*?<\/li>)<\/p>/g, '$1');
-}
+// ... existing code ...
 
 function updateWordCount() {
     const text = markdown.value;
@@ -146,7 +135,10 @@ function insertList(type) {
     const selectedText = text.substring(start, end);
     
     const lines = selectedText.split('\n');
-    const prefix = type === 'ordered' ? '1. ' : '- ';
+    let prefix = '';
+    if (type === 'ordered') prefix = '1. ';
+    else if (type === 'task') prefix = '- [ ] ';
+    else prefix = '- ';
     
     const listItems = lines.map(line => prefix + line).join('\n');
     
@@ -158,41 +150,112 @@ function insertList(type) {
     markDirty();
 }
 
+// Modal Management
+function showModal(modalId) {
+    document.getElementById('modal-overlay').classList.remove('hidden');
+    document.getElementById(modalId).classList.remove('hidden');
+}
+
+function hideModal(modalId) {
+    document.getElementById('modal-overlay').classList.add('hidden');
+    document.getElementById(modalId).classList.add('hidden');
+    // Clear inputs
+    document.querySelectorAll(`#${modalId} input`).forEach(input => input.value = '');
+}
+
+function hideAllModals() {
+    document.getElementById('modal-overlay').classList.add('hidden');
+    document.querySelectorAll('.modal').forEach(modal => modal.classList.add('hidden'));
+}
+
+// Close modals on overlay click
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+    if (e.target.id === 'modal-overlay') {
+        hideAllModals();
+    }
+});
+
+// Link Modal
 function insertLink() {
-    const url = prompt('Enter URL:');
-    const text = prompt('Enter link text:') || url;
-    
-    if (url) {
-        insertMarkdown(`[${text}](`, `)`);
-    }
+    const start = markdown.selectionStart;
+    const end = markdown.selectionEnd;
+    const text = markdown.value;
+    const selectedText = text.substring(start, end);
+
+    const urlInput = document.getElementById('link-url');
+    const textInput = document.getElementById('link-text');
+
+    urlInput.value = '';
+    textInput.value = selectedText;
+
+    showModal('link-modal');
+    urlInput.focus();
 }
 
+document.getElementById('link-cancel').addEventListener('click', () => hideModal('link-modal'));
+document.getElementById('link-submit').addEventListener('click', () => {
+    const url = document.getElementById('link-url').value;
+    const text = document.getElementById('link-text').value;
+
+    if (url) {
+        insertMarkdown(`[${text || url}](${url})`, '');
+    }
+    hideModal('link-modal');
+});
+
+// Image Modal
 function insertImage() {
-    const url = prompt('Enter image URL:');
-    const alt = prompt('Enter alt text:') || '';
-    
-    if (url) {
-        insertMarkdown(`![${alt}](`, `)`);
-    }
+    showModal('image-modal');
 }
 
-function insertTable() {
-    const rows = prompt('Number of rows:', '3');
-    const cols = prompt('Number of columns:', '3');
-    
-    if (rows && cols) {
-        let table = '';
-        const header = '|' + ' Header |'.repeat(parseInt(cols)) + '\n';
-        const separator = '|' + ' --- |'.repeat(parseInt(cols)) + '\n';
-        table += header + separator;
-        
-        for (let i = 0; i < parseInt(rows) - 1; i++) {
-            table += '|' + ' Cell |'.repeat(parseInt(cols)) + '\n';
+document.getElementById('image-browse').addEventListener('click', async () => {
+    const path = await ipcRenderer.invoke('select-image');
+    if (path) {
+        // Convert to file URL format and handle spaces
+        let formattedPath = path.replace(/\\/g, '/');
+        // Encode each segment but keep slash separators
+        formattedPath = formattedPath.split('/').map(segment => encodeURIComponent(segment)).join('/');
+        // Add protocol if it's an absolute path
+        if (!formattedPath.startsWith('http') && !formattedPath.startsWith('file://')) {
+             formattedPath = 'file:///' + formattedPath;
         }
-        
-        insertMarkdown(table, '');
+        document.getElementById('image-url').value = formattedPath;
     }
+});
+
+document.getElementById('image-cancel').addEventListener('click', () => hideModal('image-modal'));
+document.getElementById('image-submit').addEventListener('click', () => {
+    const url = document.getElementById('image-url').value;
+    const alt = document.getElementById('image-alt').value;
+
+    if (url) {
+        insertMarkdown(`![${alt}](${url})`, '');
+    }
+    hideModal('image-modal');
+});
+
+// Table Modal
+function insertTable() {
+    showModal('table-modal');
 }
+
+document.getElementById('table-cancel').addEventListener('click', () => hideModal('table-modal'));
+document.getElementById('table-submit').addEventListener('click', () => {
+    const rows = parseInt(document.getElementById('table-rows').value) || 3;
+    const cols = parseInt(document.getElementById('table-cols').value) || 3;
+
+    let table = '';
+    const header = '|' + ' Header |'.repeat(cols) + '\n';
+    const separator = '|' + ' --- |'.repeat(cols) + '\n';
+    table += header + separator;
+
+    for (let i = 0; i < rows - 1; i++) {
+        table += '|' + ' Cell |'.repeat(cols) + '\n';
+    }
+
+    insertMarkdown(table, '');
+    hideModal('table-modal');
+});
 
 // File operations
 function newFile() {
@@ -239,6 +302,15 @@ ipcRenderer.on('file-opened', (event, data) => {
     markClean();
     updatePreview();
     updateWordCount();
+});
+
+// Menu IPC handlers
+ipcRenderer.on('menu-new', () => newFile());
+ipcRenderer.on('menu-open', () => openFile());
+ipcRenderer.on('menu-save', () => saveFile());
+ipcRenderer.on('menu-save-as', () => saveAsFile());
+ipcRenderer.on('toggle-dark-mode', () => {
+    document.body.classList.toggle('dark-mode');
 });
 
 ipcRenderer.on('file-saved', (event, path) => {
