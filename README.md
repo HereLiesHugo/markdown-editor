@@ -1,6 +1,6 @@
 # Markdown Editor
 
-A modern, Electron-based Markdown editor with a focus on aesthetics and usability.
+A modern, Electron-based Markdown editor with a focus on aesthetics and ease of use.
 
 ## Features
 
