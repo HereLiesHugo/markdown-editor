@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, Menu } = require('electron');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -19,6 +19,86 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   }
 }
+
+const menuTemplate = [
+  {
+    label: 'File',
+    submenu: [
+      {
+        label: 'New',
+        accelerator: 'CmdOrCtrl+N',
+        click: (item, focusedWindow) => {
+          if (focusedWindow) focusedWindow.webContents.send('menu-new');
+        }
+      },
+      {
+        label: 'Open',
+        accelerator: 'CmdOrCtrl+O',
+        click: (item, focusedWindow) => {
+          if (focusedWindow) focusedWindow.webContents.send('menu-open');
+        }
+      },
+      {
+        label: 'Save',
+        accelerator: 'CmdOrCtrl+S',
+        click: (item, focusedWindow) => {
+          if (focusedWindow) focusedWindow.webContents.send('menu-save');
+        }
+      },
+      {
+        label: 'Save As',
+        accelerator: 'CmdOrCtrl+Shift+S',
+        click: (item, focusedWindow) => {
+          if (focusedWindow) focusedWindow.webContents.send('menu-save-as');
+        }
+      },
+      { type: 'separator' },
+      { role: 'quit' }
+    ]
+  },
+  {
+    label: 'Edit',
+    submenu: [
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      { type: 'separator' },
+      {
+        label: 'Options',
+        submenu: [
+          {
+            label: 'Dark Mode',
+            type: 'checkbox',
+            checked: true,
+            click: (item, focusedWindow) => {
+              if (focusedWindow) focusedWindow.webContents.send('toggle-dark-mode');
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    label: 'View',
+    submenu: [
+      { role: 'reload' },
+      { role: 'forceReload' },
+      { role: 'toggleDevTools' },
+      { type: 'separator' },
+      { role: 'resetZoom' },
+      { role: 'zoomIn' },
+      { role: 'zoomOut' },
+      { type: 'separator' },
+      { role: 'togglefullscreen' }
+    ]
+  }
+];
+
+const menu = Menu.buildFromTemplate(menuTemplate);
+Menu.setApplicationMenu(menu);
 
 app.whenReady().then(createWindow);
 
@@ -138,3 +218,16 @@ ipcMain.on('save-file-as', async (event, { content }) => {
     console.error('Error saving file:', error);
   }
 });
+
+ipcMain.handle('select-image', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [
+        { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'] }
+      ]
+    });
+    if (result.canceled) {
+      return null;
+    }
+    return result.filePaths[0];
+  });
